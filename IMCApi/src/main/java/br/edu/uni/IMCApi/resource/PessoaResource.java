@@ -1,7 +1,9 @@
 package br.edu.uni.IMCApi.resource;
 
 import br.edu.uni.IMCApi.model.Pessoa;
+import jakarta.validation.Valid;
 import jakarta.websocket.server.PathParam;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -23,8 +25,15 @@ public class PessoaResource {
     }
 
     @GetMapping("")
-    public String home(){
-        return "servidor está on";
+    public String home(
+            @RequestParam(required = false,
+            defaultValue = "")
+            String version){
+        if (version.equals("01")){
+            return "Nova Versão do serviço";
+        }else {
+            return "servidor está on";
+        }
     }
 
 
@@ -37,8 +46,21 @@ public class PessoaResource {
         return "Acesso não autorizado";
     }
 
+
+    @GetMapping("/v1/count")
+    public String getPEssoasCountv1(
+            @RequestHeader String token){
+        if (token.contains("HHH") &&
+                token.charAt(5)== 'K' && token.length() == 10){
+            return pessoas.size()+"";
+        }
+        return "Acesso não autorizado";
+    }
+
     @PostMapping("")
-    public String Salvar(@RequestBody Pessoa p){
+    @ResponseStatus(HttpStatus.CREATED)
+    public String Salvar(
+            @RequestBody @Valid Pessoa p){
         pessoas.add(p);
         return "Pessoa Salvo com sucesso";
     }
@@ -87,6 +109,14 @@ public class PessoaResource {
             }
         }
         return aux;
+    }
+
+
+    @ExceptionHandler(Exception.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public String trataExcecao(Exception e) {
+        System.out.println(e.getMessage());
+        return  e.getMessage();
     }
 
 }

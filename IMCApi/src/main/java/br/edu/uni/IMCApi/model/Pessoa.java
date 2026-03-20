@@ -1,14 +1,26 @@
 package br.edu.uni.IMCApi.model;
 
 
+import jakarta.validation.constraints.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
 
 public class Pessoa {
 
+    @NotNull
+    @NotEmpty
     private String nome;
-    private double peso,altura;
+    @Min(value = 1,
+            message = "deve ser maior que 1")
+    private double peso;
+    @Min(1)
+    private double altura;
     private boolean sexo;
+    //@Past
     private LocalDate dataNascimento;
     private ArrayList<Vacina> vacinasTomadas = new ArrayList<>();
 
@@ -94,4 +106,6 @@ public class Pessoa {
     public void setDataNascimento(LocalDate dataNascimento) {
         this.dataNascimento = dataNascimento;
     }
+
+
 }
