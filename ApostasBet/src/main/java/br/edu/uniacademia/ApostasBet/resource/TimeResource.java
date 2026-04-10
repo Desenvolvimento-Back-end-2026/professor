@@ -53,5 +53,10 @@ public class TimeResource {
 
     }
 
+    @GetMapping("/centenarios")
+    public ResponseEntity<?> getTimeCentenarios(){
+        return ResponseEntity.ok().body( timeService.getTimes100Anos() );
+    }
+
 
 }

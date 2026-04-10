@@ -2,12 +2,14 @@ package br.edu.uniacademia.ApostasBet.service;
 
 import br.edu.uniacademia.ApostasBet.dto.TimeCreateDTO;
 import br.edu.uniacademia.ApostasBet.dto.TimeDetailsResponseDTO;
+import br.edu.uniacademia.ApostasBet.dto.TimeResponseComDataDTO;
 import br.edu.uniacademia.ApostasBet.dto.TimeResponseDTO;
 import br.edu.uniacademia.ApostasBet.model.Time;
 import br.edu.uniacademia.ApostasBet.repository.TimeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -70,5 +72,22 @@ public class TimeService {
             return new TimeResponseDTO(t.getId(), t.getNome());
         }
         return null;
+    }
+
+    public List<TimeResponseComDataDTO> getTimes100Anos() {
+        int ano100 = LocalDate.now().getYear() - 100;
+
+        LocalDate data100AnosAtras = LocalDate.of(ano100,
+                LocalDate.now().getMonth(),
+                LocalDate.now().getDayOfMonth());
+
+        List<Time> timeList = timeRepository.findByDataFundacaoLessThan(data100AnosAtras);
+
+        List<TimeResponseComDataDTO> lista = new ArrayList<>();
+        for (Time time : timeList) {
+            lista.add( new TimeResponseComDataDTO(time.getId(),
+                    time.getNome(), time.getDataFundacao()));
+        }
+        return lista;
     }
 }
