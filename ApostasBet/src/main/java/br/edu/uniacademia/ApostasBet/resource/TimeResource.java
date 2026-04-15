@@ -3,6 +3,8 @@ package br.edu.uniacademia.ApostasBet.resource;
 
 import br.edu.uniacademia.ApostasBet.dto.TimeCreateDTO;
 import br.edu.uniacademia.ApostasBet.dto.TimeDetailsResponseDTO;
+import br.edu.uniacademia.ApostasBet.exceptions.CampoVazioException;
+import br.edu.uniacademia.ApostasBet.exceptions.DataInvalidaException;
 import br.edu.uniacademia.ApostasBet.model.Time;
 import br.edu.uniacademia.ApostasBet.service.TimeService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,9 +20,14 @@ public class TimeResource {
     TimeService timeService;
 
     @PostMapping()
-    public ResponseEntity<?> saveTime( @RequestBody TimeCreateDTO time){
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body( timeService.salvar(time)  );
+    public ResponseEntity<?> saveTime( @RequestBody TimeCreateDTO time)
+            throws CampoVazioException, DataInvalidaException {
+//        try {
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body( timeService.salvar(time)  );
+//        } catch (CampoVazioException | DataInvalidaException e) {
+//            return ResponseEntity.badRequest().body(e.getMessage());
+//        }
     }
 
     @GetMapping()
@@ -47,7 +54,8 @@ public class TimeResource {
 
     @PutMapping("/{id}")
     public ResponseEntity<?> alterar(@PathVariable Integer id,
-                                     @RequestBody TimeCreateDTO time){
+                                     @RequestBody TimeCreateDTO time)
+            throws CampoVazioException {
 
         return ResponseEntity.ok().body( timeService.alterar(id, time));
 

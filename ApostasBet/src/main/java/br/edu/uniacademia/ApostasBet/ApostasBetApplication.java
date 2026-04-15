@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
 
@@ -30,6 +32,8 @@ public class ApostasBetApplication implements CommandLineRunner {
 	JogoRepositpry jogoRepo;
 	@Autowired
 	ApostaRepository apostaRepo;
+	@Autowired
+	PasswordEncoder b;
 
 	@Override
 	public void run(String... args) throws Exception {
@@ -78,6 +82,14 @@ public class ApostasBetApplication implements CommandLineRunner {
 
 		apostaRepo.save(apt);
 		apostaRepo.flush();
+
+
+		//BCryptPasswordEncoder b = new BCryptPasswordEncoder();
+
+		System.out.println(b.encode("Spring boot"));
+		System.out.println(b.encode("Spring Boot"));
+		System.out.println(b.encode("a"));
+		System.out.println(b.encode("sdfkj ashdfkjsh jghdfsjf hsdjf hsdjjdsf jkdsh"));
 
 	}
 }
