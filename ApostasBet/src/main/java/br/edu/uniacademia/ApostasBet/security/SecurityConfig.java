@@ -4,16 +4,23 @@ package br.edu.uniacademia.ApostasBet.security;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.authentication.configuration.EnableGlobalAuthentication;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
     @Bean
@@ -22,12 +29,15 @@ public class SecurityConfig {
     }
 
     @Bean
-    // PErmissões na url
+    // Permissões na url
     public SecurityFilterChain  securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(c-> c.disable())
                 .authorizeHttpRequests( a ->
                         a.requestMatchers("/api/public/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
+//                        .requestMatchers("/api/geral").hasRole("APOSTADOR")
+                        .requestMatchers("/api/apostador/**")
+                                .hasAnyRole("ADMIN","APOSTADOR")
                                 .anyRequest().authenticated()
                 )
                 .httpBasic(Customizer.withDefaults())
@@ -41,6 +51,15 @@ public class SecurityConfig {
     @Bean
     // Usuários com permissão
     public UserDetailsService userDetailsService() {
+        UserDetails u1 = User.withUsername("admin")
+                .password(getPasswordEncoder().encode("123"))
+                .roles("ADMIN").build();
+
+        UserDetails u2 = User.withUsername("apostador")
+                .password(getPasswordEncoder().encode("123"))
+                .roles("APOSTADOR").build();
+
+        return new InMemoryUserDetailsManager(u1, u2);
 
     }
 
