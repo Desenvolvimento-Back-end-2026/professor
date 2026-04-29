@@ -1,15 +1,18 @@
 package br.edu.uniacademia.ApostasBet.service;
 
 
+import br.edu.uniacademia.ApostasBet.security.UserLogado;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -17,17 +20,24 @@ import java.util.function.Function;
 public class JwtService {
 
     private final long EXPIRATION_TIME = 1000*60*60;
-    private final String secretKey = "SFsdfsdf34234Hersiudiduw9qe8qewuiuewiru389ruwieruewere4534543EWRWRwe";
+    //private final String secretKey = "SFsdfsdf34234Hersiudiduw9qe8qewuiuewiru389ruwieruewere4534543EWRWRwe";
+    @Value("${jwt.secret}")
+    private String secretKey;
+
 
     public String gerarToken(UserDetails userDetails) {
+        System.out.println("KEY :: "+secretKey);
         Map<String, Object> claims = new HashMap<>();
 
-        claims.put("nome", userDetails.getUsername());
-        claims.put("matricula", "1234567");
-        claims.put("email", "teste@teste");
-        claims.put("id", "58");
+        claims.put("nome", ((UserLogado)userDetails).getUser().getNome());
+        //claims.put("matricula", );
+        claims.put("email", ((UserLogado)userDetails).getUser().getEmail());
+        claims.put("id", ((UserLogado)userDetails).getUser().getId());
 
-        String role = userDetails.getAuthorities().iterator().next().getAuthority();
+        List<String> role = userDetails.getAuthorities()
+                .stream().map(r->r.getAuthority().toString()).toList();
+
+//        String role = userDetails.getAuthorities().iterator().next().getAuthority();
         claims.put("role", role);
 
         return criarToken(claims, userDetails.getUsername());

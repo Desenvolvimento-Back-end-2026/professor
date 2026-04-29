@@ -32,7 +32,7 @@ public class Usuario {
     @NotNull
     @NotBlank
     private String login;
-    @Column(nullable = false,length = 40)
+    @Column(nullable = false,length = 60)
     @NotNull
     @NotBlank
     private String senha;

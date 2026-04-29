@@ -52,14 +52,14 @@ public class ApostasBetApplication implements CommandLineRunner {
 		System.out.println(t1.getNome());
 
 		Administrador adm = new Administrador(0,"Admin José",
-				"admin@unibet.com.br","admin","admin",
+				"admin@unibet.com.br","admin",b.encode("admin"),
 				null,"123");
 
 		adminRepo.save(adm);
 		adminRepo.flush();
 
 		Apostador apo = new Apostador(0, "Pedrin da Silva",
-				"pedrin@pedrin","ped","123", null,1000,
+				"pedrin@pedrin","ped",b.encode("123"), null,1000,
 				LocalDate.now().minusYears(25),
 				"123456789","7070-x",false);
 

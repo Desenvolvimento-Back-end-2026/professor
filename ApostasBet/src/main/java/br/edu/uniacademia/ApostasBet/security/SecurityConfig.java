@@ -62,20 +62,20 @@ public class SecurityConfig {
         return http.build();
     }
 
-    @Bean
-    // Usuários com permissão
-    public UserDetailsService userDetailsService() {
-        UserDetails u1 = User.withUsername("admin")
-                .password(getPasswordEncoder().encode("123"))
-                .roles("ADMIN").build();
-
-        UserDetails u2 = User.withUsername("apostador")
-                .password(getPasswordEncoder().encode("123"))
-                .roles("APOSTADOR").build();
-
-        return new InMemoryUserDetailsManager(u1, u2);
-
-    }
+//    @Bean
+//    // Usuários com permissão
+//    public UserDetailsService userDetailsService() {
+//        UserDetails u1 = User.withUsername("admin")
+//                .password(getPasswordEncoder().encode("123"))
+//                .roles("ADMIN").build();
+//
+//        UserDetails u2 = User.withUsername("apostador")
+//                .password(getPasswordEncoder().encode("123"))
+//                .roles("APOSTADOR").build();
+//
+//        return new InMemoryUserDetailsManager(u1, u2);
+//
+//    }
 
 
 }
