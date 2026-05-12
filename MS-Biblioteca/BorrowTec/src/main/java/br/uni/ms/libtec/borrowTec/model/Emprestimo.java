@@ -20,7 +20,7 @@ public class Emprestimo {
     private LocalDateTime dataEmprestimo;
     private LocalDateTime dataDevolucao;
 
-    private int idLivro;
+    private int idUsuario;
     private String isbnLivro;
 
     @Transient
