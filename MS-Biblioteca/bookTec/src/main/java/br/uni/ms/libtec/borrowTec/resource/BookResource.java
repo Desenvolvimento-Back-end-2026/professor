@@ -59,23 +59,23 @@ public class BookResource {
         }
     }
 
-    @PostMapping("/{isbn}/emprestar")
-    public ResponseEntity<?> emprestar(@PathVariable("isbn") String isbn){
+
+    @PatchMapping("/{isbn}/emprestar")
+    public ResponseEntity<?> emprestaBook(@PathVariable("isbn") String isbn){
         try {
-            bookService.emprestar(isbn);
-            return ResponseEntity.ok("Empréstimo registrado no livro com sucesso.");
+            return ResponseEntity.ok(bookService.emprestar(isbn));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.notFound().build();
+        }
+    }
+    @PatchMapping("/{isbn}/devolver")
+    public ResponseEntity<?> devolverBook(@PathVariable("isbn") String isbn){
+        try {
+            return ResponseEntity.ok(bookService.devolver(isbn));
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
         }
     }
 
-    @PostMapping("/{isbn}/devolver")
-    public ResponseEntity<?> devolver(@PathVariable("isbn") String isbn){
-        try {
-            bookService.devolver(isbn);
-            return ResponseEntity.ok("Devolução registrada no livro com sucesso.");
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
-    }
+
 }

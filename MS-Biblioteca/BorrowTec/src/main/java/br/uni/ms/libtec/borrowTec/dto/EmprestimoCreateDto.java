@@ -19,6 +19,6 @@ public class EmprestimoCreateDto {
     @NotBlank(message = "O ISBN do livro é obrigatório")
     private String isbnLivro;
 
-    @NotNull(message = "A data de devolução prevista é obrigatória")
+    //@NotNull(message = "A data de devolução prevista é obrigatória")
     private LocalDateTime dataDevolucao;
 }

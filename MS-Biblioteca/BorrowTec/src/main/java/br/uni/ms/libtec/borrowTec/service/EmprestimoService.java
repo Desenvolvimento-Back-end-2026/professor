@@ -1,10 +1,14 @@
 package br.uni.ms.libtec.borrowTec.service;
 
+import br.uni.ms.libtec.borrowTec.dto.BookSimpleListDto;
 import br.uni.ms.libtec.borrowTec.dto.EmprestimoCreateDto;
 import br.uni.ms.libtec.borrowTec.dto.EmprestimoListDto;
 import br.uni.ms.libtec.borrowTec.model.Emprestimo;
 import br.uni.ms.libtec.borrowTec.repository.EmprestimoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.task.TaskExecutionProperties;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -18,7 +22,7 @@ public class EmprestimoService {
     @Autowired
     EmprestimoRepository eRepo;
 
-    private final String BOOK_API_URL = "http://localhost:9002/api/book";
+    final String URL_BOOK = "http://localhost:9020/api/book";
 
     public List<EmprestimoListDto> getAll() throws Exception {
         List<Emprestimo> emprestimos = eRepo.findAll();
@@ -36,12 +40,29 @@ public class EmprestimoService {
     }
 
     public EmprestimoListDto save(EmprestimoCreateDto dto) throws Exception {
-        // Regra de negócio: Notificar o microsserviço de livros para incrementar a quantidade
-        RestTemplate restTemplate = new RestTemplate();
+
+        RestTemplate rt = new RestTemplate();
+        rt.setRequestFactory(new org.springframework.http.client.JdkClientHttpRequestFactory());
+
+        BookSimpleListDto bookCheck = null;
         try {
-            restTemplate.postForEntity(BOOK_API_URL + "/" + dto.getIsbnLivro() + "/emprestar", null, String.class);
-        } catch (Exception ex) {
-            throw new Exception("Erro ao registrar empréstimo no inventário de livros: " + ex.getMessage());
+            bookCheck = rt.getForObject(URL_BOOK + "/" + dto.getIsbnLivro(), BookSimpleListDto.class);
+        } catch (Exception e) {
+            throw new Exception("Livro não encontrado no microsserviço.");
+        }
+
+        if (bookCheck == null || bookCheck.getNumeroExemplares() <= 0) {
+            throw new Exception("Livro não disponível para empréstimo. Sem exemplares.");
+        }
+
+        BookSimpleListDto book = rt.patchForObject(
+                URL_BOOK+"/"+dto.getIsbnLivro()+"/emprestar",
+                null,
+                BookSimpleListDto.class
+                );
+
+        if (book == null){
+            throw new Exception("Falha na comunicação com microsserviço de livros");
         }
 
         Emprestimo emprestimo = new Emprestimo();
@@ -58,8 +79,6 @@ public class EmprestimoService {
     public EmprestimoListDto edit(int id, EmprestimoCreateDto dto) {
         Emprestimo emprestimo = eRepo.findById(id).orElseThrow();
         
-        // Se houver alteração de livro, seria necessário tratar a devolução do antigo e empréstimo do novo.
-        // Por simplicidade neste CRUD básico, atualizaremos apenas os dados locais
         emprestimo.setIdUsuario(dto.getIdUsuario());
         emprestimo.setIsbnLivro(dto.getIsbnLivro());
         emprestimo.setDataDevolucao(dto.getDataDevolucao());
@@ -71,18 +90,28 @@ public class EmprestimoService {
 
     public EmprestimoListDto delete(int id) throws Exception {
         Emprestimo emprestimo = eRepo.findById(id).orElseThrow();
-        
-        // Regra de negócio: Notificar o microsserviço de livros para decrementar a quantidade (devolução)
-        RestTemplate restTemplate = new RestTemplate();
-        try {
-            restTemplate.postForEntity(BOOK_API_URL + "/" + emprestimo.getIsbnLivro() + "/devolver", null, String.class);
-        } catch (Exception ex) {
-            throw new Exception("Erro ao registrar devolução no inventário de livros: " + ex.getMessage());
-        }
 
         EmprestimoListDto dto = mapToListDto(emprestimo);
         eRepo.delete(emprestimo);
         return dto;
+    }
+
+    public EmprestimoListDto devolver(int id) throws Exception {
+        Emprestimo emprestimo = eRepo.findById(id).orElseThrow(() -> new Exception("Empréstimo não encontrado"));
+
+        RestTemplate rt = new RestTemplate();
+        rt.setRequestFactory(new org.springframework.http.client.JdkClientHttpRequestFactory());
+
+        try {
+            rt.patchForObject(URL_BOOK + "/" + emprestimo.getIsbnLivro() + "/devolver", null, BookSimpleListDto.class);
+        } catch (Exception e) {
+            throw new Exception("Falha ao registrar devolução no microsserviço de livros");
+        }
+
+        emprestimo.setDataDevolucao(LocalDateTime.now());
+        emprestimo = eRepo.save(emprestimo);
+
+        return mapToListDto(emprestimo);
     }
 
     private EmprestimoListDto mapToListDto(Emprestimo e) {

@@ -58,4 +58,13 @@ public class EmprestimoResource {
             return ResponseEntity.notFound().build();
         }
     }
+
+    @PatchMapping("/{id}/devolver")
+    public ResponseEntity<?> devolver(@PathVariable("id") int id) {
+        try {
+            return ResponseEntity.ok(emprestimoService.devolver(id));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 }

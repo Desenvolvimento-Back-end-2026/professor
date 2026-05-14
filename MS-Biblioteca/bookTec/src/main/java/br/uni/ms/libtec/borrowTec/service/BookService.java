@@ -2,6 +2,7 @@ package br.uni.ms.libtec.borrowTec.service;
 
 import br.uni.ms.libtec.borrowTec.dto.BookCreateDto;
 import br.uni.ms.libtec.borrowTec.dto.BookListDto;
+import br.uni.ms.libtec.borrowTec.dto.BookSimpleListDto;
 import br.uni.ms.libtec.borrowTec.model.Book;
 import br.uni.ms.libtec.borrowTec.model.Genero;
 import br.uni.ms.libtec.borrowTec.repository.BookRepository;
@@ -105,21 +106,42 @@ public class BookService {
         return dto;
     }
 
-    public void emprestar(String isbn) throws Exception {
-        Book b = bRepo.findById(isbn).orElseThrow();
-        if (b.getNumeroEmprestado() >= b.getNumeroExemplares()) {
-            throw new Exception("Não há exemplares disponíveis para empréstimo.");
+    public BookSimpleListDto emprestar(String isbn) throws Exception {
+
+        Book b = bRepo.findById(isbn).orElseThrow( );
+
+        if (b.getNumeroExemplares() <= 0){
+            throw new Exception("não há mais livros para emprestimo!!!");
         }
-        b.setNumeroEmprestado(b.getNumeroEmprestado() + 1);
+
+        b.setNumeroExemplares( b.getNumeroExemplares() -1 );
+        b.setNumeroEmprestado( b.getNumeroEmprestado() +1 );
+
         bRepo.save(b);
+
+        return new BookSimpleListDto(b.getIsbn(),
+                b.getTitulo(), b.getNumeroExemplares(),
+                b.getNumeroEmprestado());
+
+
     }
 
-    public void devolver(String isbn) throws Exception {
-        Book b = bRepo.findById(isbn).orElseThrow();
-        if (b.getNumeroEmprestado() <= 0) {
-            throw new Exception("Não há empréstimos registrados para este livro.");
+    public BookSimpleListDto devolver(String isbn) throws Exception {
+        Book b = bRepo.findById(isbn).orElseThrow( );
+
+        if (b.getNumeroEmprestado() <= 0){
+            throw new Exception("não há mais livros emprestados!!!");
         }
-        b.setNumeroEmprestado(b.getNumeroEmprestado() - 1);
+
+
+        b.setNumeroExemplares( b.getNumeroExemplares() +1 );
+        b.setNumeroEmprestado( b.getNumeroEmprestado() -1 );
+
         bRepo.save(b);
+
+        return new BookSimpleListDto(b.getIsbn(),
+                b.getTitulo(), b.getNumeroExemplares(),
+                b.getNumeroEmprestado());
+
     }
 }
