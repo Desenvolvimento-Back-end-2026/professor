@@ -7,6 +7,7 @@ import br.uni.ms.libtec.borrowTec.model.Emprestimo;
 import br.uni.ms.libtec.borrowTec.repository.EmprestimoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.task.TaskExecutionProperties;
+import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -22,7 +23,10 @@ public class EmprestimoService {
     @Autowired
     EmprestimoRepository eRepo;
 
-    final String URL_BOOK = "http://localhost:9020/api/book";
+    @Autowired
+    RestTemplate rt;
+
+    final String URL_BOOK = "http://BOOKTEC/api/book";
 
     public List<EmprestimoListDto> getAll() throws Exception {
         List<Emprestimo> emprestimos = eRepo.findAll();
@@ -41,8 +45,6 @@ public class EmprestimoService {
 
     public EmprestimoListDto save(EmprestimoCreateDto dto) throws Exception {
 
-        RestTemplate rt = new RestTemplate();
-        rt.setRequestFactory(new org.springframework.http.client.JdkClientHttpRequestFactory());
 
         BookSimpleListDto bookCheck = null;
         try {
@@ -98,9 +100,6 @@ public class EmprestimoService {
 
     public EmprestimoListDto devolver(int id) throws Exception {
         Emprestimo emprestimo = eRepo.findById(id).orElseThrow(() -> new Exception("Empréstimo não encontrado"));
-
-        RestTemplate rt = new RestTemplate();
-        rt.setRequestFactory(new org.springframework.http.client.JdkClientHttpRequestFactory());
 
         try {
             rt.patchForObject(URL_BOOK + "/" + emprestimo.getIsbnLivro() + "/devolver", null, BookSimpleListDto.class);
