@@ -1,5 +1,6 @@
 package br.uni.ms.libtec.borrowTec.service;
 
+import br.uni.ms.libtec.borrowTec.client.BookClient;
 import br.uni.ms.libtec.borrowTec.dto.BookSimpleListDto;
 import br.uni.ms.libtec.borrowTec.dto.EmprestimoCreateDto;
 import br.uni.ms.libtec.borrowTec.dto.EmprestimoListDto;
@@ -26,6 +27,9 @@ public class EmprestimoService {
     @Autowired
     RestTemplate rt;
 
+    @Autowired
+    BookClient bookclient;
+
     final String URL_BOOK = "http://BOOKTEC/api/book";
 
     public List<EmprestimoListDto> getAll() throws Exception {
@@ -48,7 +52,8 @@ public class EmprestimoService {
 
         BookSimpleListDto bookCheck = null;
         try {
-            bookCheck = rt.getForObject(URL_BOOK + "/" + dto.getIsbnLivro(), BookSimpleListDto.class);
+            //bookCheck = rt.getForObject(URL_BOOK + "/" + dto.getIsbnLivro(), BookSimpleListDto.class);
+              bookCheck = bookclient.getOneBook(dto.getIsbnLivro()).getBody();
         } catch (Exception e) {
             throw new Exception("Livro não encontrado no microsserviço.");
         }
@@ -62,6 +67,8 @@ public class EmprestimoService {
                 null,
                 BookSimpleListDto.class
                 );
+
+//        BookSimpleListDto book = bookclient.emprestaBook(dto.getIsbnLivro()).getBody();
 
         if (book == null){
             throw new Exception("Falha na comunicação com microsserviço de livros");
