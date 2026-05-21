@@ -27,6 +27,7 @@ public class JwtFilter extends OncePerRequestFilter {
         String path = request.getRequestURI();
         
         if (path.startsWith("/api/user/validate") || path.startsWith("/h2-console") || 
+           path.startsWith("/swagger-ui") || path.startsWith("/v3/api-docs") ||
            (path.equals("/api/user") && request.getMethod().equalsIgnoreCase("POST"))) {
             filterChain.doFilter(request, response);
             return;
