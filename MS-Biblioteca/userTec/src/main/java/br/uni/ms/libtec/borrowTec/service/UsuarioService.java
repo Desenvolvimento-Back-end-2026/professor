@@ -89,4 +89,12 @@ public class UsuarioService {
         return new UserListDto(usuario.getId(), usuario.getNome(),
                 (usuario.isEhAdministrador()?"Administrador":"Leitor") );
     }
+
+    public UserListDto validate(br.uni.ms.libtec.borrowTec.dto.LoginDTO dto) throws Exception {
+        Usuario usuario = uRepo.findByLoginAndSenha(dto.getLogin(), dto.getSenha())
+                .orElseThrow(() -> new Exception("Credenciais inválidas"));
+        
+        return new UserListDto(usuario.getId(), usuario.getNome(),
+                (usuario.isEhAdministrador()?"Administrador":"Leitor") );
+    }
 }

@@ -65,4 +65,12 @@ public class UsuarioResource {
         }
     }
 
+    @PostMapping("/validate")
+    public ResponseEntity<?> validateUser(@RequestBody br.uni.ms.libtec.borrowTec.dto.LoginDTO dto){
+        try {
+            return ResponseEntity.ok(userService.validate(dto));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+        }
+    }
 }
