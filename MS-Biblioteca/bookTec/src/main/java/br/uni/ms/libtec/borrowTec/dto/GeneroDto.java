@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class GeneroDto {
 
-    private int id;
+    private Integer id;
 
     @NotBlank(message = "O nome do gênero não pode ser vazio")
     private String nome;
