@@ -1,0 +1,117 @@
+services:
+
+  # ─── Eureka Service Registry ───────────────────────────────────────────────
+  discovery:
+    build: ./DiscoveryTec
+    container_name: discovery
+    ports:
+      - "8761:8761"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8761/actuator/health 2>/dev/null || wget -qO- http://localhost:8761/ 2>/dev/null | grep -q 'Eureka' && echo OK || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+
+  # ─── User Service ──────────────────────────────────────────────────────────
+  usertec:
+    build: ./userTec
+    container_name: usertec
+    ports:
+      - "9001:9001"
+    environment:
+      EUREKA_URL: http://discovery:8761/eureka
+      SPRING_DATASOURCE_URL: jdbc:h2:file:/data/userDB
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    volumes:
+      - userdb_data:/data
+    depends_on:
+      - discovery
+    restart: on-failure
+
+  # ─── Auth Service ──────────────────────────────────────────────────────────
+  authtec:
+    build: ./authTec
+    container_name: authtec
+    ports:
+      - "9004:9004"
+    environment:
+      EUREKA_URL: http://discovery:8761/eureka
+    depends_on:
+      - discovery
+      - usertec
+    restart: on-failure
+
+  # ─── Book Service — instância 1 (inicia o servidor H2) ────────────────────
+  booktec1:
+    build: ./bookTec
+    container_name: booktec1
+    hostname: booktec1
+    ports:
+      - "9002:9002"
+    environment:
+      SERVER_PORT: 9002
+      EUREKA_URL: http://discovery:8761/eureka
+      SPRING_DATASOURCE_URL: "jdbc:h2:file:/data/bookDB;AUTO_SERVER=TRUE"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    volumes:
+      - bookdb_data:/data
+    depends_on:
+      - discovery
+    restart: on-failure
+
+  # ─── Book Service — instância 2 (compartilha o mesmo H2 via AUTO_SERVER) ──
+  booktec2:
+    build: ./bookTec
+    container_name: booktec2
+    hostname: booktec2
+    ports:
+      - "9005:9002"
+    environment:
+      SERVER_PORT: 9002
+      EUREKA_URL: http://discovery:8761/eureka
+      SPRING_DATASOURCE_URL: "jdbc:h2:file:/data/bookDB;AUTO_SERVER=TRUE"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    volumes:
+      - bookdb_data:/data
+    depends_on:
+      - booktec1
+    restart: on-failure
+
+  # ─── Borrow Service ────────────────────────────────────────────────────────
+  borrowtec:
+    build: ./BorrowTec
+    container_name: borrowtec
+    ports:
+      - "9003:9003"
+    environment:
+      EUREKA_URL: http://discovery:8761/eureka
+      SPRING_DATASOURCE_URL: jdbc:h2:file:/data/borrowDB
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    volumes:
+      - borrowdb_data:/data
+    depends_on:
+      - discovery
+      - booktec1
+    restart: on-failure
+
+  # ─── API Gateway ───────────────────────────────────────────────────────────
+  gateway:
+    build: ./GatewayTec
+    container_name: gateway
+    ports:
+      - "8080:8080"
+    environment:
+      EUREKA_URL: http://discovery:8761/eureka
+    depends_on:
+      - discovery
+      - authtec
+      - usertec
+      - booktec1
+      - borrowtec
+    restart: on-failure
+
+volumes:
+  userdb_data:
+  bookdb_data:
+  borrowdb_data:

@@ -6,9 +6,10 @@ import br.uni.ms.libtec.borrowTec.dto.EmprestimoCreateDto;
 import br.uni.ms.libtec.borrowTec.dto.EmprestimoListDto;
 import br.uni.ms.libtec.borrowTec.model.Emprestimo;
 import br.uni.ms.libtec.borrowTec.repository.EmprestimoRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.task.TaskExecutionProperties;
-import org.springframework.cloud.client.loadbalancer.LoadBalanced;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -30,7 +31,17 @@ public class EmprestimoService {
     @Autowired
     BookClient bookclient;
 
+    @Autowired
+    HttpServletRequest httpRequest;
+
     final String URL_BOOK = "http://BOOKTEC/api/book";
+
+    private HttpEntity<Void> requestWithAuth() {
+        HttpHeaders headers = new HttpHeaders();
+        String auth = httpRequest.getHeader("Authorization");
+        if (auth != null) headers.set("Authorization", auth);
+        return new HttpEntity<>(headers);
+    }
 
     public List<EmprestimoListDto> getAll() throws Exception {
         List<Emprestimo> emprestimos = eRepo.findAll();
@@ -62,13 +73,12 @@ public class EmprestimoService {
             throw new Exception("Livro não disponível para empréstimo. Sem exemplares.");
         }
 
-        BookSimpleListDto book = rt.patchForObject(
-                URL_BOOK+"/"+dto.getIsbnLivro()+"/emprestar",
-                null,
+        BookSimpleListDto book = rt.exchange(
+                URL_BOOK + "/" + dto.getIsbnLivro() + "/emprestar",
+                HttpMethod.PATCH,
+                requestWithAuth(),
                 BookSimpleListDto.class
-                );
-
-//        BookSimpleListDto book = bookclient.emprestaBook(dto.getIsbnLivro()).getBody();
+        ).getBody();
 
         if (book == null){
             throw new Exception("Falha na comunicação com microsserviço de livros");
@@ -109,7 +119,12 @@ public class EmprestimoService {
         Emprestimo emprestimo = eRepo.findById(id).orElseThrow(() -> new Exception("Empréstimo não encontrado"));
 
         try {
-            rt.patchForObject(URL_BOOK + "/" + emprestimo.getIsbnLivro() + "/devolver", null, BookSimpleListDto.class);
+            rt.exchange(
+                    URL_BOOK + "/" + emprestimo.getIsbnLivro() + "/devolver",
+                    HttpMethod.PATCH,
+                    requestWithAuth(),
+                    BookSimpleListDto.class
+            );
         } catch (Exception e) {
             throw new Exception("Falha ao registrar devolução no microsserviço de livros");
         }
