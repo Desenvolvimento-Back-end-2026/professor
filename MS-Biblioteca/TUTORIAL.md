@@ -11,13 +11,13 @@ Cliente (você)
       ↓  porta 8080
   [ Gateway ]
       ↓  roteamento via Eureka
-  ┌──────────────────────────────────┐
-  │  AuthTec   :9004  /auth/**       │
-  │  UserTec   :9001  /api/user/**   │
-  │  BookTec 1 :9002  /api/book/**   │ ← Eureka: BOOKTEC (load balancer)
-  │  BookTec 2 :9005  /api/book/**   │ ←
+  ┌─────────────────────────────────────┐
+  │  AuthTec   :9004  /auth/**          │
+  │  UserTec   :9001  /api/user/**      │
+  │  BookTec 1 :9002  /api/book/**      │ ← Eureka: BOOKTEC (load balancer)
+  │  BookTec 2 :9005  /api/book/**      │ ←
   │  BorrowTec :9003  /api/emprestimo/**│
-  └──────────────────────────────────┘
+  └─────────────────────────────────────┘
       ↑  todos se registram em
   [ Eureka Discovery ] :8761
 ```
@@ -300,48 +300,7 @@ Você verá os logs alternando entre `booktec1` e `booktec2`, demonstrando o rou
 
 ---
 
-## Parte 4 — Endpoints Disponíveis (Referência Rápida)
-
-### Auth (`/auth`)
-| Método | Endpoint | Auth | Descrição |
-|--------|----------|------|-----------|
-| POST | `/auth/login` | Não | Login, retorna JWT |
-
-### Usuários (`/api/user`)
-| Método | Endpoint | Auth | Descrição |
-|--------|----------|------|-----------|
-| POST | `/api/user` | Não | Cadastrar usuário |
-| GET | `/api/user` | Sim | Listar usuários |
-| GET | `/api/user/{id}` | Sim | Buscar usuário |
-| PUT | `/api/user/{id}` | Sim | Atualizar usuário |
-| DELETE | `/api/user/{id}` | Sim | Remover usuário |
-
-### Livros (`/api/book`) e Gêneros (`/api/genero`)
-| Método | Endpoint | Auth | Descrição |
-|--------|----------|------|-----------|
-| GET | `/api/book` | Sim | Listar livros |
-| GET | `/api/book/{isbn}` | Sim | Buscar livro |
-| POST | `/api/book` | Sim | Cadastrar livro |
-| PUT | `/api/book/{isbn}` | Sim | Atualizar livro |
-| DELETE | `/api/book/{isbn}` | Sim | Remover livro |
-| PATCH | `/api/book/{isbn}/emprestar` | Sim | Decrementar estoque |
-| PATCH | `/api/book/{isbn}/devolver` | Sim | Incrementar estoque |
-| GET | `/api/genero` | Sim | Listar gêneros |
-| POST | `/api/genero` | Sim | Cadastrar gênero |
-
-### Empréstimos (`/api/emprestimo`)
-| Método | Endpoint | Auth | Descrição |
-|--------|----------|------|-----------|
-| GET | `/api/emprestimo` | Sim | Listar empréstimos |
-| GET | `/api/emprestimo/{id}` | Sim | Buscar empréstimo |
-| POST | `/api/emprestimo` | Sim | Criar empréstimo |
-| PUT | `/api/emprestimo/{id}` | Sim | Atualizar empréstimo |
-| DELETE | `/api/emprestimo/{id}` | Sim | Remover empréstimo |
-| PATCH | `/api/emprestimo/{id}/devolver` | Sim | Registrar devolução |
-
----
-
-## Parte 5 — Swagger UI (Execução Local sem Docker)
+## Parte 4 — Swagger UI (Execução Local sem Docker)
 
 Com os serviços rodando localmente, acesse a documentação interativa:
 
@@ -352,47 +311,4 @@ Com os serviços rodando localmente, acesse a documentação interativa:
 | BookTec | http://localhost:9002/swagger-ui/index.html |
 | BorrowTec | http://localhost:9003/swagger-ui/index.html |
 
----
 
-## Parte 6 — Funcionamento do JWT
-
-```
-1. POST /auth/login  →  AuthTec gera token JWT:
-   {
-     "id": 1,
-     "nome": "João Silva",
-     "papel": "Administrador",
-     "iat": <agora>,
-     "exp": <agora + 24h>
-   }
-
-2. Nos demais endpoints:
-   Authorization: Bearer <token>
-   ↓
-   JwtFilter valida a assinatura e extrai claims
-   ↓
-   Requisição autorizada
-
-3. Inter-serviços (BorrowTec → BookTec):
-   O token do cliente é automaticamente propagado
-   pelo FeignAuthInterceptor e pelos HttpHeaders no RestTemplate
-```
-
----
-
-## Dica: Executar Sem Docker (Desenvolvimento Local)
-
-Ordem de inicialização recomendada:
-
-1. `DiscoveryTec` (porta 8761) — aguardar iniciar
-2. `UserTec` (porta 9001)
-3. `AuthTec` (porta 9004)
-4. `BookTec` (porta 9002) — pode subir uma segunda instância com `PORT=9005`
-5. `BorrowTec` (porta 9003)
-6. `GatewayTec` (porta 8080)
-
-```bash
-# Exemplo: subir segunda instância do BookTec localmente
-cd bookTec
-PORT=9005 mvn spring-boot:run
-```
